@@ -27,6 +27,7 @@ type Client struct {
 	BrowserDriverDir string
 	Timeout          int
 	BrowserAutoFill  bool
+	FirefoxSingleTab bool
 }
 
 // New create new browser based client
@@ -38,6 +39,7 @@ func New(idpAccount *cfg.IDPAccount) (*Client, error) {
 		BrowserExecutablePath: idpAccount.BrowserExecutablePath,
 		Timeout:               idpAccount.Timeout,
 		BrowserAutoFill:       idpAccount.BrowserAutoFill,
+		FirefoxSingleTab:      idpAccount.FirefoxSingleTab,
 	}, nil
 }
 
@@ -90,6 +92,12 @@ func (cl *Client) Authenticate(loginDetails *creds.LoginDetails) (string, error)
 	browserType := pw.Chromium
 	if cl.BrowserType == "firefox" {
 		browserType = pw.Firefox
+		ffPrefs := map[string]interface{}{}
+		if cl.FirefoxSingleTab {
+			ffPrefs["browser.link.open_newwindow"] = 1
+			ffPrefs["browser.link.open_newwindow.restriction"] = 0
+		}
+		launchOptions.FirefoxUserPrefs = ffPrefs
 	} else if cl.BrowserType == "webkit" {
 		browserType = pw.WebKit
 	}
