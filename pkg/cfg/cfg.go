@@ -67,6 +67,7 @@ type IDPAccount struct {
 	Prompter              string `ini:"prompter"`
 	KCAuthErrorMessage    string `ini:"kc_auth_error_message,omitempty"` // used by KeyCloak; hide from user if not set
 	KCAuthErrorElement    string `ini:"kc_auth_error_element,omitempty"` // used by KeyCloak; hide from user if not set
+	FirefoxSingleTab      bool   `ini:"firefox_single_tab,omitempty"`
 }
 
 func (ia IDPAccount) String() string {
