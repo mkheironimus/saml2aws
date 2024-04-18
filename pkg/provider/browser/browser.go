@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 
@@ -26,6 +27,7 @@ type Client struct {
 	BrowserDriverDir string
 	Timeout          int
 	BrowserAutoFill  bool
+	BrowserStateFile string
 }
 
 // New create new browser based client
@@ -37,6 +39,7 @@ func New(idpAccount *cfg.IDPAccount) (*Client, error) {
 		BrowserExecutablePath: idpAccount.BrowserExecutablePath,
 		Timeout:               idpAccount.Timeout,
 		BrowserAutoFill:       idpAccount.BrowserAutoFill,
+		BrowserStateFile:      idpAccount.BrowserStateFile,
 	}, nil
 }
 
@@ -109,12 +112,33 @@ func (cl *Client) Authenticate(loginDetails *creds.LoginDetails) (string, error)
 		return "", err
 	}
 
-	page, err := browser.NewPage()
+	var context playwright.BrowserContext
+	var page playwright.Page
+	if len(cl.BrowserStateFile) > 0 {
+		contextOptions := playwright.BrowserNewContextOptions{}
+		if _, err := os.Stat(cl.BrowserStateFile); err == nil {
+			contextOptions.StorageStatePath = &cl.BrowserStateFile
+		}
+		context, err = browser.NewContext(contextOptions)
+		if err != nil {
+			return "", err
+		}
+		page, err = context.NewPage()
+	} else {
+		page, err = browser.NewPage()
+	}
 	if err != nil {
 		return "", err
 	}
 
 	defer func() {
+		if len(cl.BrowserStateFile) > 0 {
+			logger.Info("save browser state and clean up context")
+			context.StorageState(cl.BrowserStateFile)
+			if err := context.Close(); err != nil {
+				logger.Info("Error when closing browser context", err)
+			}
+		}
 		logger.Info("clean up browser")
 		if err := browser.Close(); err != nil {
 			logger.Info("Error when closing browser", err)

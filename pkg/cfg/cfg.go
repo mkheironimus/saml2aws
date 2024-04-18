@@ -65,6 +65,7 @@ type IDPAccount struct {
 	BrowserDriverDir      string `ini:"browser_driver_dir,omitempty"` // used by browser; hide from user if not set
 	Headless              bool   `ini:"headless"`                     // used by browser
 	Prompter              string `ini:"prompter"`
+	BrowserStateFile      string `ini:"browser_state_file"`
 }
 
 func (ia IDPAccount) String() string {
